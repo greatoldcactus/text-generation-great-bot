@@ -249,7 +249,7 @@ def handle_text(message):
     
     if(message.text.startswith('/')):
         if(not process_command(message)):
-            bot.send_message(m.chat.id, f'Неизвестная команда: {message.text}')
+            bot.send_message(message.from_user.id, f'Неизвестная команда: {message.text}')
         return
     
         
