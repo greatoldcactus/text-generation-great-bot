@@ -301,20 +301,7 @@ def exit_handler():
 @run
 @run_threaded
 def run_bot():         
-    lasterr = 0
-    # Запускаем бота
-    while True:
-        if(time.time()-lasterr>8):
-            lasterr=time.time()
-            try:
-                print('restarting')
-                bot.infinity_polling(timeout=10, long_polling_timeout = 5)
-            except Exception as e:
-                print(e)
-                if(isinstance(e,KeyboardInterrupt)):
-                    break
-        else:
-            break
+    bot.infinity_polling(timeout=10, long_polling_timeout = 5)
 
 @run
 def run_anything():
