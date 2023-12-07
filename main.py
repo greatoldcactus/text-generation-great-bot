@@ -304,11 +304,11 @@ def run_bot():
     lasterr = 0
     # Запускаем бота
     while True:
-        if(time.time()-lasterr>25):
+        if(time.time()-lasterr>8):
             lasterr=time.time()
             try:
                 print('restarting')
-                bot.polling(none_stop=True, interval=0)
+                bot.infinity_polling(timeout=10, long_polling_timeout = 5)
             except Exception as e:
                 print(e)
                 if(isinstance(e,KeyboardInterrupt)):
