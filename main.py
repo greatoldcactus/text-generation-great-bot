@@ -85,7 +85,7 @@ def mode(message):
     keyboard.add(key_simple_continue)
     bot.send_message(message.from_user.id, text='Выберите режим', reply_markup=keyboard)
     
-@register_command("model","choose modes")
+@register_command("model","choose model")
 @run_threaded
 @catch_errors_on_command
 def model(message):
