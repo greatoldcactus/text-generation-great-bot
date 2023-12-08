@@ -18,9 +18,13 @@ def run(func):
 threaded_runs = []
 
 def run_threaded(func):
-    def async_call(*argc,**argv):
-        threaded_runs.append((func,argc,argv))
-    return async_call
+    def threaded_call(*argc,**argv):
+        def call():
+            func(*argc,**argv)
+            
+        t = Thread(target=call)
+        t.start()
+    return threaded_call
 
 def catch_errors_on_command(func):
     def err_catcher(message,*argc,**argv):
@@ -311,25 +315,24 @@ def callback_worker(call):
             bot.send_message(call.from_user.id,f"New response size: {mode[1]}")
     bot.delete_message(call.message.chat.id,call.message.message_id)
 
-@atexit.register
-def exit_handler():
-    write_user_data()
-
-@run
+def save_data_on_exit():
+    @atexit.register
+    def exit_handler():
+        write_user_data()
+        
 @run_threaded
 def run_bot():         
     bot.infinity_polling(timeout=10, long_polling_timeout = 5)
 
-@run
-def run_anything():
-    while(True):
-        global threaded_runs
-        time.sleep(0.1)
-        for func,argc,argv in threaded_runs:
-            def call():
-                func(*argc,**argv)
-            
-            t = Thread(target=call)
-            t.start()
-        threaded_runs = []
+
+def main():
+    
+    save_data_on_exit()
+    run_bot()
         
+    while True:
+        msg = input('>')
+        print(msg)
+        
+if __name__=='__main__':
+    main()
