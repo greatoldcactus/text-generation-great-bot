@@ -13,7 +13,6 @@ def run(func):
     func()
     return func
 
-threaded_runs = []
 
 def run_threaded(func):
     def threaded_call(*argc,**argv):
@@ -75,8 +74,28 @@ except Exception as e:
 if users is None:
     users = dict()
 
+@register_command("check","check me")
+@make_command_remove_message
+@run_threaded
+@catch_errors_on_command
+def check_user(message):
+    username = message.from_user.username
+    if not username in users:
+        users[username]=dict()
+    user = users[username]
+    if not 'history' in user:
+        user['history']=[]
+    if not 'mode' in user:
+        user['mode']='chat'
+    if not 'id' in user:
+        user['id'] = message.from_user.id
+
 def get_user_data(message):
-    return users[message.from_user.username]
+    username = message.from_user.username
+    user = users[username]
+    return user['id']
+
+
 
 @register_command("mode","set used mode")
 @make_command_remove_message
@@ -156,6 +175,14 @@ def profile(message):
     user_data = get_user_data(message)
     user_data['history']=[]
     bot.send_message(message.from_user.id, text='context dropped')
+    
+@register_command("test","test command")
+@run_threaded
+@catch_errors_on_command
+def profile(message):
+    def tstprint(object):
+        print(object,'='*20,dir(object),sep='\n')
+    tstprint(message.chat)
 
 @register_command("help","show help mesage")
 @make_command_remove_message
@@ -212,12 +239,7 @@ def generate(message):
         "messages": history
     }
     
-    @run_threaded
-    def msg_generating(mesage):
-        bot.send_message(message.from_user.id, text=f'generating')  
-        
-    msg_generating(message)
-
+    msg_generating = bot.send_message(message.from_user.id, text=f'generating')  
     response = requests.post(url, headers=headers, json=data, verify=False)
     assistant_message = response.json()['choices'][0]['message']['content']
     history.append({"role": "assistant", "content": assistant_message})
@@ -242,6 +264,7 @@ def generate(message):
                 msg+=part
         if(len(msg)>3):
             send_message_garanteed(text=f'{msg}') 
+    bot.delete_message(msg_generating.chat.id,msg_generating.message_id)
     
 @run
 def load_settings():
@@ -299,20 +322,29 @@ def callback_worker(call):
                 user_data['history']=[]
                 bot.send_message(call.from_user.id,"new mode: %s"%type)
         case 'model':
-            model = data[data.find('.')+1:]
-            url = settings['url']+'internal/model/load'
-            data = {
-            "model_name":model
-            }
+            @run_threaded
+            @catch_errors_on_command
+            def load_model(message):
+                model = data[data.find('.')+1:]
+                url = settings['url']+'internal/model/load'
+                payload = {
+                "model_name":model
+                }
+                
+                headers = {
+                    "Content-Type": "application/json"
+                }
             
-            headers = {
-                "Content-Type": "application/json"
-            }
-            response = requests.post(url, json=data,headers=headers,verify=False)
-            if(response.status_code==200):
-                bot.send_message(call.from_user.id,"model loaded: %s"%model)
-            else:
-                bot.send_message(call.from_user.id,f"failed to load model {response}")
+                msg_loading = bot.send_message(call.message.chat.id, text=f'loading') 
+                response = requests.post(url, json=payload,headers=headers,verify=False)
+                
+                bot.delete_message(msg_loading.chat.id,msg_loading.message_id)
+                if(response.status_code==200):
+                    bot.send_message(call.from_user.id,"model loaded: %s"%model)
+                else:
+                    bot.send_message(call.from_user.id,f"failed to load model {response}")
+                    
+            load_model(call.message)
         case 'size':
             user_data['response_size']=int(mode[1])
             bot.send_message(call.from_user.id,f"New response size: {mode[1]}")
