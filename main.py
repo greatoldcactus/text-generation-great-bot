@@ -82,15 +82,15 @@ def get_user_data(message):
 @catch_errors_on_command
 def mode(message):
     keyboard = types.InlineKeyboardMarkup()
-    key_continue = types.InlineKeyboardButton(text='Продолжение', callback_data='mode.continue')
-    key_chat = types.InlineKeyboardButton(text='Чат', callback_data='mode.chat')
-    key_1resp = types.InlineKeyboardButton(text='1 вопрос 1 ответ', callback_data='mode.new_msg')
+    key_continue = types.InlineKeyboardButton(text='continue', callback_data='mode.continue')
+    key_chat = types.InlineKeyboardButton(text='chat', callback_data='mode.chat')
+    key_1resp = types.InlineKeyboardButton(text='1 query 1 response', callback_data='mode.new_msg')
     key_simple_continue = types.InlineKeyboardButton(text='continue_simple', callback_data='mode.continue_simple')
     keyboard.add(key_continue)
     keyboard.add(key_chat)
     keyboard.add(key_1resp)
     keyboard.add(key_simple_continue)
-    bot.send_message(message.from_user.id, text='Выберите режим', reply_markup=keyboard)
+    bot.send_message(message.from_user.id, text='select mode', reply_markup=keyboard)
     
 @register_command("model","choose model")
 @make_command_remove_message
@@ -105,9 +105,9 @@ def model(message):
         for model in models:
             key = types.InlineKeyboardButton(text=f'{model}', callback_data=f'model.{model}')
             keyboard.add(key)
-        bot.send_message(message.from_user.id, text='Выберите модель:', reply_markup=keyboard)
+        bot.send_message(message.from_user.id, text='Select model:', reply_markup=keyboard)
     except Exception as e:
-        bot.send_message(message.from_user.id, text=f'Неизвестная ошибка: {e}, ответ api был: {response}')
+        bot.send_message(message.from_user.id, text=f'unknown error: {e}, api answer: {response}')
     
     pass
 
@@ -119,9 +119,9 @@ def unload(message):
     url = settings['url']+'internal/model/unload'
     response = requests.post(url, verify=False)
     if(not response.status_code==200):
-        bot.send_message(message.from_user.id, text=f'Провал: {response}')
+        bot.send_message(message.from_user.id, text=f'fail: {response}')
     else:
-        bot.send_message(message.from_user.id, text=f'ОК')
+        bot.send_message(message.from_user.id, text=f'unloaded')
         
         
 @register_command("response_size","sets size of response")
@@ -133,7 +133,7 @@ def set_size(message):
     for size in [50,100,200,400,500,800,1024,1600,2048,4096]:
         key = types.InlineKeyboardButton(text=f'{size}', callback_data=f'size.{size}')
         keyboard.add(key)
-    bot.send_message(message.from_user.id, text='Выберите размер:', reply_markup=keyboard)
+    bot.send_message(message.from_user.id, text='Select response size:', reply_markup=keyboard)
     
 @register_command("profile","get user profile")
 @make_command_remove_message
@@ -153,7 +153,7 @@ def profile(message):
 def profile(message):
     user_data = get_user_data(message)
     user_data['history']=[]
-    bot.send_message(message.from_user.id, text='контекст сброшен')
+    bot.send_message(message.from_user.id, text='context dropped')
 
 @register_command("help","show help mesage")
 @make_command_remove_message
@@ -248,7 +248,7 @@ def start(m, res=False):
     print(m)
     # записать пользователя прям сразу тут в users
 
-    bot.send_message(m.chat.id, 'Я на связи. Напиши мне что-нибудь )')
+    bot.send_message(m.chat.id, 'Hello')
 # Получение сообщений от юзера
 @bot.message_handler(content_types=["text"])
 def handle_text(message):
@@ -265,7 +265,7 @@ def handle_text(message):
     
     if(message.text.startswith('/')):
         if(not process_command(message)):
-            bot.send_message(message.from_user.id, f'Неизвестная команда: {message.text}')
+            bot.send_message(message.from_user.id, f'Unknown command: {message.text}')
         return
     
         
@@ -290,7 +290,7 @@ def callback_worker(call):
             if(user_data['mode']!=type):
                 user_data['mode']=type
                 user_data['history']=[]
-                bot.send_message(call.from_user.id,"новый режим: %s"%type)
+                bot.send_message(call.from_user.id,"new mode: %s"%type)
         case 'model':
             model = data[data.find('.')+1:]
             url = settings['url']+'internal/model/load'
@@ -303,12 +303,12 @@ def callback_worker(call):
             }
             response = requests.post(url, json=data,headers=headers,verify=False)
             if(response.status_code==200):
-                bot.send_message(call.from_user.id,"новая модель: %s"%model)
+                bot.send_message(call.from_user.id,"model loaded: %s"%model)
             else:
-                bot.send_message(call.from_user.id,f"Ошибка при попытке загрузить модель {response}")
+                bot.send_message(call.from_user.id,f"failed to load model {response}")
         case 'size':
             user_data['response_size']=int(mode[1])
-            bot.send_message(call.from_user.id,f"Новый размер ответа: {mode[1]}")
+            bot.send_message(call.from_user.id,f"New response size: {mode[1]}")
     bot.delete_message(call.message.chat.id,call.message.message_id)
 
 @atexit.register
