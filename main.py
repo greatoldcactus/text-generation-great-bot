@@ -93,8 +93,14 @@ def check_user(message):
 def get_user_data(message):
     username = message.from_user.username
     user = users[username]
-    return user['id']
+    return user
 
+@run_threaded
+def send_temporal_message(bot,chat,text='',timeout=120,**kwargs):
+    message = bot.send_message(chat, text=text,**kwargs )
+    time.sleep(timeout)
+    bot.delete_message(chat,message.message_id)
+    
 
 
 @register_command("mode","set used mode")
@@ -321,6 +327,8 @@ def callback_worker(call):
                 user_data['mode']=type
                 user_data['history']=[]
                 bot.send_message(call.from_user.id,"new mode: %s"%type)
+            else:
+                bot.send_message(call.from_user.id,"mode already selected:d %s"%type)
         case 'model':
             @run_threaded
             @catch_errors_on_command
