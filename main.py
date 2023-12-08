@@ -1,11 +1,8 @@
 import telebot
-import time
 from telebot import types
 import requests
 import atexit
 import pickle
-import openai
-import asyncio
 from threading import Thread
 import traceback
 import sys
@@ -244,8 +241,6 @@ def load_settings():
     global elevated_users
     settings = eval(open("settings.py","r").read())
     elevated_users = settings["elevated_users"]
-    openai.api_key = None if not 'key' in settings else settings["key"]
-    openai.base_url = None if not 'url' in settings else settings["url"]
 # Функция, обрабатывающая команду /start
 @bot.message_handler(commands=["start"])
 def start(m, res=False):
