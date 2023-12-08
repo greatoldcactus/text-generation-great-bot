@@ -15,9 +15,6 @@ def run(func):
     func()
     return func
 
-help_string = ""
-commands = dict()
-
 threaded_runs = []
 
 def run_threaded(func):
@@ -35,11 +32,17 @@ def catch_errors_on_command(func):
     return err_catcher
 
 
+help_string = ""
+commands_callbacks = dict()
+bot_commands = []
+
 def register_command(name,description):
     global help_string
+    command = types.BotCommand(f'/{name}',f'{description}')
     help_string=f"{help_string}\n/{name} - {description}"
+    bot_commands.append(command)
     def register(func):
-        commands[name]=func
+        commands_callbacks[name]=func
         return func
     
     return register
@@ -140,7 +143,7 @@ def profile(message):
     user_data['history']=[]
     bot.send_message(message.from_user.id, text='контекст сброшен')
 
-@register_command("help","show this mesage")
+@register_command("help","show help mesage")
 @run_threaded
 @catch_errors_on_command
 def help(message):
@@ -151,8 +154,8 @@ def process_command(message):
     if(message.text[0]!='/'):
         return False
     cmd = message.text[1:max(len(message.text),message.text.find(' '))]
-    if cmd in commands:
-        callback = commands[cmd]
+    if cmd in commands_callbacks:
+        callback = commands_callbacks[cmd]
         callback(message)
         return True
             
@@ -257,7 +260,8 @@ def handle_text(message):
         user_data['mode']='chat'
     
     generate(message)
-    
+
+bot.set_my_commands(bot_commands)   
 
 @bot.callback_query_handler(func=lambda call: True)
 def callback_worker(call):
@@ -315,4 +319,4 @@ def run_anything():
             t = Thread(target=call)
             t.start()
         threaded_runs = []
-            
+        
