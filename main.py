@@ -315,11 +315,12 @@ def callback_worker(call):
             bot.send_message(call.from_user.id,f"New response size: {mode[1]}")
     bot.delete_message(call.message.chat.id,call.message.message_id)
 
-def save_data_on_exit():
-    @atexit.register
-    def exit_handler():
-        write_user_data()
+
+@atexit.register
+def exit_handler():
+    write_user_data()
         
+@run
 @run_threaded
 def run_bot():         
     bot.infinity_polling(timeout=10, long_polling_timeout = 5)
@@ -327,9 +328,6 @@ def run_bot():
 
 def main():
     
-    save_data_on_exit()
-    run_bot()
-        
     while True:
         msg = input('>')
         print(msg)
