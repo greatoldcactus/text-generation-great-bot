@@ -6,6 +6,7 @@ import pickle
 from threading import Thread
 import traceback
 import sys
+import time
 
 
 def run(func):
@@ -221,19 +222,26 @@ def generate(message):
     assistant_message = response.json()['choices'][0]['message']['content']
     history.append({"role": "assistant", "content": assistant_message})
     print(assistant_message)
+    def send_message_garanteed(text=''):
+        while True:
+            try:
+                bot.send_message(message.from_user.id, text=text)  
+                return
+            except:
+                time.sleep(5)
     if(len(assistant_message)<4000):
-        bot.send_message(message.from_user.id, text=f'{assistant_message}')    
+        send_message_garanteed(text=f'{assistant_message}')    
     else:
         msg = ""
         for part in assistant_message.split('\n'):
             if(len(msg)+len(part)>4000):
-                bot.send_message(message.from_user.id, text=f'{msg}') 
+                send_message_garanteed(text=f'{msg}') 
                 msg = part
             else:
                 msg+='\n'
                 msg+=part
         if(len(msg)>3):
-            bot.send_message(message.from_user.id, text=f'{msg}') 
+            send_message_garanteed(text=f'{msg}') 
     
 @run
 def load_settings():
