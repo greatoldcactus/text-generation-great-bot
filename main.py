@@ -47,6 +47,12 @@ def register_command(name,description):
     
     return register
 
+def make_command_remove_message(func):
+    def callback(message,*arg,**kwarg):
+        func(message,*arg,**kwarg)
+        bot.delete_message(message.chat.id,message.message_id)
+        
+    return callback
 
 # Создаем экземпляр бота
 bot = telebot.TeleBot(open("token.txt","r").read())
@@ -71,6 +77,7 @@ def get_user_data(message):
     return users[message.from_user.username]
 
 @register_command("mode","set used mode")
+@make_command_remove_message
 @run_threaded
 @catch_errors_on_command
 def mode(message):
@@ -86,6 +93,7 @@ def mode(message):
     bot.send_message(message.from_user.id, text='Выберите режим', reply_markup=keyboard)
     
 @register_command("model","choose model")
+@make_command_remove_message
 @run_threaded
 @catch_errors_on_command
 def model(message):
@@ -104,6 +112,7 @@ def model(message):
     pass
 
 @register_command("unload","unload model")
+@make_command_remove_message
 @run_threaded
 @catch_errors_on_command
 def unload(message):
@@ -116,6 +125,7 @@ def unload(message):
         
         
 @register_command("response_size","sets size of response")
+@make_command_remove_message
 @run_threaded
 @catch_errors_on_command
 def set_size(message):
@@ -126,6 +136,7 @@ def set_size(message):
     bot.send_message(message.from_user.id, text='Выберите размер:', reply_markup=keyboard)
     
 @register_command("profile","get user profile")
+@make_command_remove_message
 @run_threaded
 @catch_errors_on_command
 def profile(message):
@@ -136,6 +147,7 @@ def profile(message):
     bot.send_message(message.from_user.id, text=response)
     
 @register_command("reset","reset context")
+@make_command_remove_message
 @run_threaded
 @catch_errors_on_command
 def profile(message):
@@ -144,6 +156,7 @@ def profile(message):
     bot.send_message(message.from_user.id, text='контекст сброшен')
 
 @register_command("help","show help mesage")
+@make_command_remove_message
 @run_threaded
 @catch_errors_on_command
 def help(message):
@@ -296,7 +309,7 @@ def callback_worker(call):
         case 'size':
             user_data['response_size']=int(mode[1])
             bot.send_message(call.from_user.id,f"Новый размер ответа: {mode[1]}")
-            
+    bot.delete_message(call.message.chat.id,call.message.message_id)
 
 @atexit.register
 def exit_handler():
